@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from category.models import Category
@@ -7,7 +9,7 @@ class Product(models.Model):
     product_name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     product_description = models.TextField(max_length=500, blank=True)
-    price = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     image = models.ImageField(upload_to='photos/products')
     stock = models.IntegerField()
     is_available = models.BooleanField(default=True)
