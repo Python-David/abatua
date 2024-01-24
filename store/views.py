@@ -9,7 +9,6 @@ def store(request, category_slug=None):
         categories = get_list_or_404(Category, slug=category_slug)
         products = get_list_or_404(Product, is_available=True, category__in=categories)
     else:
-        categories = Category.objects.all()
         products = Product.objects.filter(is_available=True)
 
     product_count = len(products)
@@ -17,7 +16,6 @@ def store(request, category_slug=None):
     context = {
         'products': products,
         'product_count': product_count,
-        'categories': categories,
     }
     return render(request, 'store/store.html', context)
 
