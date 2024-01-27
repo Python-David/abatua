@@ -18,7 +18,7 @@ def cart(request, total=0, quantity=0, cart_items=None):
     total_tax = 0
     try:
         cart = get_object_or_404(Cart, cart_id=_get_cart_id(request))
-        cart_items = get_list_or_404(CartItem, cart=cart, is_active=True)
+        cart_items = CartItem.objects.filter(cart=cart, is_active=True)
 
         for cart_item in cart_items:
             # calculate total
