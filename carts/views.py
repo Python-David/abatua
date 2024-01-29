@@ -5,7 +5,7 @@ from carts.models import Cart, CartItem
 from store.models import Product
 
 
-def _get_cart_id(request):
+def get_cart_id(request):
     cart_id = request.session.session_key
 
     if not cart_id:
@@ -17,7 +17,7 @@ def _get_cart_id(request):
 def cart(request, total=0, quantity=0, cart_items=None):
     total_tax = 0
     try:
-        cart = get_object_or_404(Cart, cart_id=_get_cart_id(request))
+        cart = get_object_or_404(Cart, cart_id=get_cart_id(request))
         cart_items = CartItem.objects.filter(cart=cart, is_active=True)
 
         for cart_item in cart_items:
@@ -46,10 +46,10 @@ def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
     try:
-        cart = Cart.objects.get(cart_id=_get_cart_id(request))
+        cart = Cart.objects.get(cart_id=get_cart_id(request))
     except Cart.DoesNotExist:
         cart = Cart.objects.create(
-            cart_id=_get_cart_id(request),
+            cart_id=get_cart_id(request),
         )
     cart.save()
 
@@ -70,7 +70,7 @@ def add_to_cart(request, product_id):
 
 def remove_from_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    cart = Cart.objects.get(cart_id=_get_cart_id(request))
+    cart = Cart.objects.get(cart_id=get_cart_id(request))
     cart_item = get_object_or_404(CartItem, product=product, cart=cart)
 
     if cart_item.quantity > 1:
@@ -84,7 +84,7 @@ def remove_from_cart(request, product_id):
 
 def remove_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    cart = Cart.objects.get(cart_id=_get_cart_id(request))
+    cart = Cart.objects.get(cart_id=get_cart_id(request))
     cart_item = get_object_or_404(CartItem, product=product, cart=cart)
 
     cart_item.delete()

@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_list_or_404, get_object_or_404
 
+from carts.models import CartItem
+from carts.views import get_cart_id
 from category.models import Category
 from .models import Product
 
@@ -24,12 +26,14 @@ def product_detail(request, category_slug=None, product_slug=None):
     try:
         product = get_object_or_404(Product, slug=product_slug)
         category = get_object_or_404(Category, slug=category_slug)
+        in_cart = CartItem.objects.filter(cart__cart_id=get_cart_id(request), product=product).exists()
     except Exception as e:
         raise e
 
     context = {
         'product': product,
         'category': category,
+        'in_cart': in_cart,
     }
 
     return render(request, 'store/product_detail.html', context)
