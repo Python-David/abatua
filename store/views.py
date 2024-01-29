@@ -4,7 +4,7 @@ from django.shortcuts import render, get_list_or_404, get_object_or_404
 from carts.models import CartItem
 from carts.views import get_cart_id
 from category.models import Category
-from .models import Product
+from .models import Product, Variation
 
 
 def store(request, category_slug=None):
@@ -27,12 +27,9 @@ def store(request, category_slug=None):
 
 
 def product_detail(request, category_slug=None, product_slug=None):
-    try:
-        product = get_object_or_404(Product, slug=product_slug)
-        category = get_object_or_404(Category, slug=category_slug)
-        in_cart = CartItem.objects.filter(cart__cart_id=get_cart_id(request), product=product).exists()
-    except Exception as e:
-        raise e
+    product = get_object_or_404(Product, slug=product_slug)
+    category = get_object_or_404(Category, slug=category_slug)
+    in_cart = CartItem.objects.filter(cart__cart_id=get_cart_id(request), product=product).exists()
 
     context = {
         'product': product,
