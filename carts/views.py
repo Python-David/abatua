@@ -43,6 +43,9 @@ def cart(request, total=0, quantity=0, cart_items=None):
 
 
 def add_to_cart(request, product_id):
+    colour = request.GET['color']
+    size = request.GET['size']
+
     product = get_object_or_404(Product, id=product_id)
 
     try:
