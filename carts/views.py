@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, get_object_or_404, redirect, get_list_or_404
 
 from carts.models import Cart, CartItem
-from store.models import Product
+from store.models import Product, Variation
 
 
 def get_cart_id(request):
@@ -44,8 +44,20 @@ def cart(request, total=0, quantity=0, cart_items=None):
 
 def add_to_cart(request, product_id):
     if request.method == 'POST':
-        color = request.POST['color']
-        size = request.POST['size']
+        # Initialize an empty dictionary to hold variation data
+        variations = {}
+
+        # Iterate over request.POST items
+        for key, value in request.POST.items():
+            if key != 'csrfmiddlewaretoken' and value:  # Exclude CSRF token and empty fields
+
+                try:
+                    variation = Variation.objects.get(variation_category__iexact=key, variation_value__iexact=value)
+                    variations[key] = value
+                    print(variation)
+                    print(variations)
+                except:
+                    pass
 
     product = get_object_or_404(Product, id=product_id)
 
