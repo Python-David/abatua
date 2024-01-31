@@ -1,4 +1,6 @@
 from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render, get_list_or_404, get_object_or_404
 
 from carts.models import CartItem
@@ -38,3 +40,21 @@ def product_detail(request, category_slug=None, product_slug=None):
     }
 
     return render(request, 'store/product_detail.html', context)
+
+
+def search(request):
+    products = Product.objects.none()  # Initialize with an empty queryset
+    product_count = 0
+
+    keyword = request.GET.get('keyword', '')  # Simplifies checking for 'keyword'
+    if keyword:
+        products = Product.objects.order_by('-date_created').filter(
+            Q(product_description__icontains=keyword) | Q(product_name__icontains=keyword)
+        )
+        product_count = products.count()
+
+    context = {
+        'products': products,
+        'product_count': product_count,
+    }
+    return render(request, 'store/store.html', context)

@@ -53,7 +53,8 @@ def add_to_cart(request, product_id):
         for key, value in request.POST.items():
             if key != 'csrfmiddlewaretoken' and value:  # Exclude CSRF token and empty fields
                 try:
-                    variation = Variation.objects.get(product=product, variation_category__iexact=key, variation_value__iexact=value)
+                    variation = Variation.objects.get(product=product, variation_category__iexact=key,
+                                                      variation_value__iexact=value)
                     variations.append(variation)
                 except:
                     pass
@@ -66,16 +67,31 @@ def add_to_cart(request, product_id):
         )
     cart.save()
 
-    try:
-        cart_item = CartItem.objects.get(product=product, cart=cart)
-        if len(variations) > 0:
-            cart_item.variations.clear()
-            for item in variations:
-                cart_item.variations.add(item)
+    cart_item_exists = CartItem.objects.filter(product=product, cart=cart).exists()
 
-        cart_item.quantity += 1
-        cart_item.save()
-    except CartItem.DoesNotExist:
+    if cart_item_exists:
+        cart_item = CartItem.objects.filter(product=product, cart=cart)
+        existing_variations_list = []
+        id_list = []
+
+        for item in cart_item:
+            existing_variations = item.variations.all()
+            existing_variations_list.append(list(existing_variations))
+            id_list.append(item.id)
+
+        if variations in existing_variations_list:
+            index = existing_variations_list.index(variations)
+            item_id = id_list[index]
+            item = CartItem.objects.get(product=product, id=item_id)
+            item.quantity += 1
+            item.save()
+        else:
+            item = CartItem.objects.create(product=product, quantity=1, cart=cart)
+            if len(variations) > 0:
+                item.variations.clear()
+                item.variations.add(*variations)
+            item.save()
+    else:
         cart_item = CartItem.objects.create(
             product=product,
             quantity=1,
@@ -83,35 +99,35 @@ def add_to_cart(request, product_id):
         )
         if len(variations) > 0:
             cart_item.variations.clear()
-            for item in variations:
-                cart_item.variations.add(item)
+            cart_item.variations.add(*variations)
         cart_item.save()
 
     return redirect('cart')
 
 
-def remove_from_cart(request, product_id):
+def remove_from_cart(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
     cart = Cart.objects.get(cart_id=get_cart_id(request))
-    cart_item = get_object_or_404(CartItem, product=product, cart=cart)
 
-    if cart_item.quantity > 1:
-        cart_item.quantity -= 1
-        cart_item.save()
-    else:
-        cart_item.delete()
+    try:
+        cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+        else:
+            cart_item.delete()
+    except:
+        pass
 
     return redirect('cart')
 
 
-def remove_product(request, product_id):
+def remove_product(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
     cart = Cart.objects.get(cart_id=get_cart_id(request))
-    cart_item = get_object_or_404(CartItem, product=product, cart=cart)
+
+    cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
 
     cart_item.delete()
 
     return redirect('cart')
-
-
-
