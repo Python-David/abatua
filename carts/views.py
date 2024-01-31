@@ -43,23 +43,20 @@ def cart(request, total=0, quantity=0, cart_items=None):
 
 
 def add_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    variations = []
+
     if request.method == 'POST':
         # Initialize an empty dictionary to hold variation data
-        variations = {}
 
         # Iterate over request.POST items
         for key, value in request.POST.items():
             if key != 'csrfmiddlewaretoken' and value:  # Exclude CSRF token and empty fields
-
                 try:
-                    variation = Variation.objects.get(variation_category__iexact=key, variation_value__iexact=value)
-                    variations[key] = value
-                    print(variation)
-                    print(variations)
+                    variation = Variation.objects.get(product=product, variation_category__iexact=key, variation_value__iexact=value)
+                    variations.append(variation)
                 except:
                     pass
-
-    product = get_object_or_404(Product, id=product_id)
 
     try:
         cart = Cart.objects.get(cart_id=get_cart_id(request))
@@ -71,6 +68,11 @@ def add_to_cart(request, product_id):
 
     try:
         cart_item = CartItem.objects.get(product=product, cart=cart)
+        if len(variations) > 0:
+            cart_item.variations.clear()
+            for item in variations:
+                cart_item.variations.add(item)
+
         cart_item.quantity += 1
         cart_item.save()
     except CartItem.DoesNotExist:
@@ -79,6 +81,10 @@ def add_to_cart(request, product_id):
             quantity=1,
             cart=cart,
         )
+        if len(variations) > 0:
+            cart_item.variations.clear()
+            for item in variations:
+                cart_item.variations.add(item)
         cart_item.save()
 
     return redirect('cart')

@@ -8,5 +8,9 @@ class CartAdmin(admin.ModelAdmin):
     readonly_fields = ('date_added',)
 
 
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('product', 'quantity', 'cart', 'is_active')
+
+
 admin.site.register(Cart, CartAdmin)
-admin.site.register(CartItem)
+admin.site.register(CartItem, CartItemAdmin)
