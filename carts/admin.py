@@ -4,12 +4,12 @@ from .models import Cart, CartItem
 
 
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('cart_id', 'date_added')
-    readonly_fields = ('date_added',)
+    list_display = ("cart_id", "date_added")
+    readonly_fields = ("date_added",)
 
 
 class CartItemAdmin(admin.ModelAdmin):
-    list_display = ('product', 'quantity', 'cart', 'is_active')
+    list_display = ("product", "quantity", "cart", "is_active")
 
 
 admin.site.register(Cart, CartAdmin)

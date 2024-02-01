@@ -16,6 +16,4 @@ def menu_links(request):
         except ObjectDoesNotExist:
             total_quantity = 0
 
-    return {
-        'cart_item_count': total_quantity
-    }
+    return {"cart_item_count": total_quantity}

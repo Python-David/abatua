@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import models
 
@@ -23,7 +23,7 @@ class CartItem(models.Model):
     def get_tax(self, tax_rate: float) -> Decimal:
         tax_amount = (self.product.price * (Decimal(tax_rate) / 100)) * self.quantity
         # Round to 2 decimal places
-        return tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return tax_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def sub_total(self):
         return self.product.price * self.quantity

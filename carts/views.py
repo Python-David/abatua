@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.shortcuts import render, get_object_or_404, redirect, get_list_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 
 from carts.models import Cart, CartItem
 from store.models import Product, Variation
@@ -22,7 +22,7 @@ def cart(request, total=0, quantity=0, cart_items=None):
 
         for cart_item in cart_items:
             # calculate total
-            total += (cart_item.product.price * cart_item.quantity)
+            total += cart_item.product.price * cart_item.quantity
             quantity += cart_item.quantity
 
             # calculate tax
@@ -33,28 +33,33 @@ def cart(request, total=0, quantity=0, cart_items=None):
         pass
 
     context = {
-        'total': total,
-        'quantity': quantity,
-        'cart_items': cart_items,
-        'total_tax': total_tax,
-        'true_total': total + total_tax,
+        "total": total,
+        "quantity": quantity,
+        "cart_items": cart_items,
+        "total_tax": total_tax,
+        "true_total": total + total_tax,
     }
-    return render(request, 'store/cart.html', context)
+    return render(request, "store/cart.html", context)
 
 
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     variations = []
 
-    if request.method == 'POST':
+    if request.method == "POST":
         # Initialize an empty dictionary to hold variation data
 
         # Iterate over request.POST items
         for key, value in request.POST.items():
-            if key != 'csrfmiddlewaretoken' and value:  # Exclude CSRF token and empty fields
+            if (
+                key != "csrfmiddlewaretoken" and value
+            ):  # Exclude CSRF token and empty fields
                 try:
-                    variation = Variation.objects.get(product=product, variation_category__iexact=key,
-                                                      variation_value__iexact=value)
+                    variation = Variation.objects.get(
+                        product=product,
+                        variation_category__iexact=key,
+                        variation_value__iexact=value,
+                    )
                     variations.append(variation)
                 except:
                     pass
@@ -102,7 +107,7 @@ def add_to_cart(request, product_id):
             cart_item.variations.add(*variations)
         cart_item.save()
 
-    return redirect('cart')
+    return redirect("cart")
 
 
 def remove_from_cart(request, product_id, cart_item_id):
@@ -119,7 +124,7 @@ def remove_from_cart(request, product_id, cart_item_id):
     except:
         pass
 
-    return redirect('cart')
+    return redirect("cart")
 
 
 def remove_product(request, product_id, cart_item_id):
@@ -130,4 +135,4 @@ def remove_product(request, product_id, cart_item_id):
 
     cart_item.delete()
 
-    return redirect('cart')
+    return redirect("cart")
