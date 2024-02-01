@@ -4,6 +4,7 @@ from django.db import models
 from django.urls import reverse
 
 from category.models import Category
+from .config import VARIATION_CATEGORY_CHOICES
 
 
 class Product(models.Model):
@@ -39,16 +40,10 @@ class VariationManager(models.Manager):
         )
 
 
-variation_category_choice = (
-    ("color", "color"),
-    ("size", "size"),
-)
-
-
 class Variation(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variation_category = models.CharField(
-        max_length=100, choices=variation_category_choice
+        max_length=100, choices=VARIATION_CATEGORY_CHOICES
     )
     variation_value = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
