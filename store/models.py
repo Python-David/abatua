@@ -4,6 +4,7 @@ from django.db import models
 from django.urls import reverse
 
 from category.models import Category
+
 from .config import VARIATION_CATEGORY_CHOICES
 
 

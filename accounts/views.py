@@ -10,6 +10,7 @@ from django.utils.http import urlsafe_base64_encode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
+
 from .config import ACCOUNT_ACTIVATION_SUBJECT
 
 
@@ -41,15 +42,18 @@ def register(request):
 
             current_site = get_current_site(request)
             mail_subject = ACCOUNT_ACTIVATION_SUBJECT
-            message = render_to_string('accounts/account_verification_email.html', {
-                'user': user,
-                'domain': current_site,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': default_token_generator.make_token(user),
-
-            })
+            message = render_to_string(
+                "accounts/account_verification_email.html",
+                {
+                    "user": user,
+                    "domain": current_site.domain,
+                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                    "token": default_token_generator.make_token(user),
+                },
+            )
 
             send_email = EmailMessage(mail_subject, message, to=[email])
+            send_email.content_subtype = "html"
             send_email.send()
 
             messages.success(request, "Registration Successful")
@@ -89,3 +93,7 @@ def logout(request):
     messages.success(request, "You are logged out")
 
     return redirect("login")
+
+
+def activate(request):
+    return
