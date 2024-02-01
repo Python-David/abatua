@@ -7,7 +7,6 @@ from accounts.models import Account
 
 
 def register(request):
-
     # Pull data from form and create a new user
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -47,9 +46,6 @@ def login(request):
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
-
-        print("Email: ", email)  # Debugging line
-        print("Password: ", password)  # Debugging line
 
         user = auth.authenticate(email=email, password=password)
 
