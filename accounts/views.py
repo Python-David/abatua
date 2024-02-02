@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
-from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
@@ -14,7 +13,6 @@ from accounts.models import Account
 
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
-    ACCOUNT_REGISTRATION_SUCCESS_MESSAGE,
     ACCOUNT_VERIFICATION_FAILURE_MESSAGE,
     ACCOUNT_VERIFICATION_SUCCESS_MESSAGE,
     LOGIN_ERROR_MESSAGE,
@@ -84,9 +82,9 @@ def login(request):
 
         if user is not None:
             auth.login(request, user)
-            # messages.success(request, 'You are now logged in')
+            messages.success(request, "You are now logged in")
 
-            return redirect("home")
+            return redirect("dashboard")
         else:
             messages.error(request, LOGIN_ERROR_MESSAGE)
 
@@ -118,3 +116,8 @@ def activate(request, uidb64, token):
     else:
         messages.error(request, ACCOUNT_VERIFICATION_FAILURE_MESSAGE)
         return redirect("register")
+
+
+@login_required(login_url="login")
+def dashboard(request):
+    return render(request, "accounts/dashboard.html")
