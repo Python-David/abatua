@@ -10,6 +10,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
+
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
     ACCOUNT_VERIFICATION_FAILURE_MESSAGE,
@@ -81,7 +82,7 @@ def login(request):
 
         if user is not None:
             auth.login(request, user)
-            messages.success(request, 'You are now logged in')
+            messages.success(request, "You are now logged in")
 
             return redirect("dashboard")
         else:
