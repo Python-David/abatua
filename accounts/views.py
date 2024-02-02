@@ -65,7 +65,7 @@ def register(request):
 
             # messages.success(request, ACCOUNT_REGISTRATION_SUCCESS_MESSAGE)
 
-            return redirect("/accounts/login/?command=verification&email="+email)
+            return redirect("/accounts/login/?command=verification&email=" + email)
     else:
         form = RegistrationForm()
 
