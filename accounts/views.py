@@ -3,15 +3,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
 
-from .config import ACCOUNT_ACTIVATION_SUBJECT
+from .config import (
+    ACCOUNT_ACTIVATION_SUBJECT,
+    ACCOUNT_REGISTRATION_SUCCESS_MESSAGE,
+    ACCOUNT_VERIFICATION_FAILURE_MESSAGE,
+    ACCOUNT_VERIFICATION_SUCCESS_MESSAGE,
+    LOGIN_ERROR_MESSAGE,
+    LOGOUT_SUCCESS_MESSAGE,
+)
 
 
 def register(request):
@@ -55,9 +63,9 @@ def register(request):
             send_email = EmailMessage(mail_subject, message, to=[email])
             send_email.send()
 
-            messages.success(request, "Registration Successful")
+            # messages.success(request, ACCOUNT_REGISTRATION_SUCCESS_MESSAGE)
 
-            return redirect("register")
+            return redirect("/accounts/login/?command=verification&email="+email)
     else:
         form = RegistrationForm()
 
@@ -80,7 +88,7 @@ def login(request):
 
             return redirect("home")
         else:
-            messages.error(request, "Invalid login credentials")
+            messages.error(request, LOGIN_ERROR_MESSAGE)
 
             return redirect("login")
     return render(request, "accounts/login.html")
@@ -89,10 +97,24 @@ def login(request):
 @login_required(login_url="login")
 def logout(request):
     auth.logout(request)
-    messages.success(request, "You are logged out")
+    messages.success(request, LOGOUT_SUCCESS_MESSAGE)
 
     return redirect("login")
 
 
-def activate(request):
-    return
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+
+        messages.success(request, ACCOUNT_VERIFICATION_SUCCESS_MESSAGE)
+        return redirect("login")
+    else:
+        messages.error(request, ACCOUNT_VERIFICATION_FAILURE_MESSAGE)
+        return redirect("register")
