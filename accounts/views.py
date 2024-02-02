@@ -46,14 +46,13 @@ def register(request):
                 "accounts/account_verification_email.html",
                 {
                     "user": user,
-                    "domain": current_site.domain,
+                    "domain": current_site,
                     "uid": urlsafe_base64_encode(force_bytes(user.pk)),
                     "token": default_token_generator.make_token(user),
                 },
             )
 
             send_email = EmailMessage(mail_subject, message, to=[email])
-            send_email.content_subtype = "html"
             send_email.send()
 
             messages.success(request, "Registration Successful")
