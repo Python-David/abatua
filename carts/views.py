@@ -132,5 +132,27 @@ def remove_product(request, product_id, cart_item_id):
     return redirect("cart")
 
 
-def checkout(request):
-    return render(request, "store/checkout.html")
+def checkout(request, total=0, quantity=0):
+    total_tax = 0
+    cart_id = get_cart_id(request)
+    cart_, created = Cart.objects.get_or_create(cart_id=cart_id)
+    cart_items = CartItem.objects.filter(cart=cart_, is_active=True)
+
+    for cart_item in cart_items:
+        # Calculate total
+        total += cart_item.product.price * cart_item.quantity
+        quantity += cart_item.quantity
+
+        # Calculate tax
+        tax = cart_item.get_tax(3)  # Assuming get_tax is a method of CartItem
+        total_tax += tax
+
+    context = {
+        "total": total,
+        "quantity": quantity,
+        "cart_items": cart_items,
+        "total_tax": total_tax,
+        "true_total": total + total_tax,
+    }
+
+    return render(request, "store/checkout.html", context)
