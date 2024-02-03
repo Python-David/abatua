@@ -6,14 +6,20 @@ from django.utils.http import urlsafe_base64_decode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
+
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
+    ACCOUNT_DOES_NOT_EXIST_MESSAGE,
     ACCOUNT_VERIFICATION_FAILURE_MESSAGE,
     ACCOUNT_VERIFICATION_SUCCESS_MESSAGE,
     LOGIN_ERROR_MESSAGE,
-    LOGOUT_SUCCESS_MESSAGE, ACCOUNT_DOES_NOT_EXIST_MESSAGE, RESET_PASSWORD_SUBJECT, PASSWORD_RESET_SUCCESS_EMAIL,
-    RESET_PASSWORD_SUCCESS_MESSAGE, RESET_PASSWORD_ERROR_MESSAGE, PASSWORDS_DO_NOT_MATCH,
+    LOGOUT_SUCCESS_MESSAGE,
+    PASSWORD_RESET_SUCCESS_EMAIL,
     PASSWORD_RESET_SUCCESS_MESSAGE,
+    PASSWORDS_DO_NOT_MATCH,
+    RESET_PASSWORD_ERROR_MESSAGE,
+    RESET_PASSWORD_SUBJECT,
+    RESET_PASSWORD_SUCCESS_MESSAGE,
 )
 from .utils import send_email
 
@@ -49,7 +55,7 @@ def register(request):
                 user=user,
                 subject=ACCOUNT_ACTIVATION_SUBJECT,
                 template="accounts/account_verification_email.html",
-                redirect_url="/accounts/login/?command=verification&email=" + email
+                redirect_url="/accounts/login/?command=verification&email=" + email,
             )
 
             return redirect("/accounts/login/?command=verification&email=" + email)
@@ -113,7 +119,7 @@ def dashboard(request):
 
 
 def forgot_password(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         email = request.POST["email"]
         if Account.objects.filter(email=email).exists():
             user = Account.objects.get(email__iexact=email)
@@ -122,10 +128,10 @@ def forgot_password(request):
                 user=user,
                 subject=RESET_PASSWORD_SUBJECT,
                 template="accounts/reset_password_email.html",
-                redirect_url='login'
+                redirect_url="login",
             )
             messages.success(request, PASSWORD_RESET_SUCCESS_EMAIL)
-            return redirect('login')
+            return redirect("login")
         else:
             messages.error(request, ACCOUNT_DOES_NOT_EXIST_MESSAGE)
 
@@ -143,9 +149,9 @@ def reset_password_validate(request, uidb64, token):
         user = None
 
     if user is not None and default_token_generator.check_token(user, token):
-        request.session['uid'] = uid
+        request.session["uid"] = uid
         messages.success(request, RESET_PASSWORD_SUCCESS_MESSAGE)
-        return redirect("reset_password") #login
+        return redirect("reset_password")  # login
     else:
         messages.error(request, RESET_PASSWORD_ERROR_MESSAGE)
         return redirect("login")
@@ -170,4 +176,3 @@ def reset_password(request):
 
     else:
         return render(request, "accounts/reset_password.html")
-
