@@ -6,31 +6,25 @@ from store.models import Product, Variation
 
 
 def get_cart_id(request):
-    cart_id = request.session.session_key
-
-    if not cart_id:
-        cart_id = request.session.create()
-
-    return cart_id
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key
 
 
 def cart(request, total=0, quantity=0, cart_items=None):
     total_tax = 0
-    try:
-        cart = get_object_or_404(Cart, cart_id=get_cart_id(request))
-        cart_items = CartItem.objects.filter(cart=cart, is_active=True)
+    cart_id = get_cart_id(request)
+    cart_, created = Cart.objects.get_or_create(cart_id=cart_id)
+    cart_items = CartItem.objects.filter(cart=cart_, is_active=True)
 
-        for cart_item in cart_items:
-            # calculate total
-            total += cart_item.product.price * cart_item.quantity
-            quantity += cart_item.quantity
+    for cart_item in cart_items:
+        # Calculate total
+        total += cart_item.product.price * cart_item.quantity
+        quantity += cart_item.quantity
 
-            # calculate tax
-            tax = cart_item.get_tax(3)
-            total_tax += tax
-
-    except ObjectDoesNotExist:
-        pass
+        # Calculate tax
+        tax = cart_item.get_tax(3)  # Assuming get_tax is a method of CartItem
+        total_tax += tax
 
     context = {
         "total": total,
@@ -52,7 +46,7 @@ def add_to_cart(request, product_id):
         # Iterate over request.POST items
         for key, value in request.POST.items():
             if (
-                key != "csrfmiddlewaretoken" and value
+                    key != "csrfmiddlewaretoken" and value
             ):  # Exclude CSRF token and empty fields
                 try:
                     variation = Variation.objects.get(
@@ -136,3 +130,7 @@ def remove_product(request, product_id, cart_item_id):
     cart_item.delete()
 
     return redirect("cart")
+
+
+def checkout(request):
+    return render(request, "store/checkout.html")
