@@ -6,6 +6,8 @@ from django.utils.http import urlsafe_base64_decode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
+from carts.models import Cart, CartItem
+from carts.views import get_cart_id
 
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
@@ -76,6 +78,16 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
 
         if user is not None:
+            try:
+                cart = Cart.objects.get(cart_id=get_cart_id(request))
+                cart_item_exists = CartItem.objects.filter(cart=cart).exists()
+                if cart_item_exists:
+                    cart_items = CartItem.objects.filter(cart=cart)
+                    for item in cart_items:
+                        item.user = user
+                        item.save()
+            except:
+                pass
             auth.login(request, user)
             messages.success(request, "You are now logged in")
 
