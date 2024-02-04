@@ -24,7 +24,7 @@ from .config import (
     RESET_PASSWORD_SUBJECT,
     RESET_PASSWORD_SUCCESS_MESSAGE,
 )
-from .utils import merge_cart_items, send_email
+from .utils import merge_cart_items, redirect_to_next_page, send_email
 
 
 def register(request):
@@ -87,14 +87,14 @@ def login(request):
     if merge_cart_items(request, user):
         auth.login(request, user)
         messages.success(request, LOGIN_SUCCESS_MESSAGE)
-        return redirect("dashboard")
+        return redirect_to_next_page(request)
     else:
         # Handle the case where cart merging fails, if necessary
         pass
 
     auth.login(request, user)
     messages.success(request, LOGIN_SUCCESS_MESSAGE)
-    return redirect("dashboard")
+    return redirect_to_next_page(request)
 
 
 @login_required(login_url="login")

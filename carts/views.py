@@ -243,8 +243,12 @@ def remove_product(request, product_id, cart_item_id):
 def checkout(request, total=0, quantity=0):
     total_tax = 0
     cart_id = get_cart_id(request)
-    cart_, created = Cart.objects.get_or_create(cart_id=cart_id)
-    cart_items = CartItem.objects.filter(cart=cart_, is_active=True)
+    if request.user.is_authenticated:
+        # cart_, created = Cart.objects.get_or_create(cart_id=cart_id)
+        cart_items = CartItem.objects.filter(user=request.user, is_active=True)
+    else:
+        cart_, created = Cart.objects.get_or_create(cart_id=cart_id)
+        cart_items = CartItem.objects.filter(cart=cart_, is_active=True)
 
     for cart_item in cart_items:
         # Calculate total
