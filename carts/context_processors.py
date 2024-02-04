@@ -25,4 +25,3 @@ def menu_links(request):
                 total_quantity = 0
 
     return {"cart_item_count": total_quantity}
-

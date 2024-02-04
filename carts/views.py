@@ -55,7 +55,7 @@ def add_to_cart(request, product_id):
             # Iterate over request.POST items
             for key, value in request.POST.items():
                 if (
-                        key != "csrfmiddlewaretoken" and value
+                    key != "csrfmiddlewaretoken" and value
                 ):  # Exclude CSRF token and empty fields
                     try:
                         variation = Variation.objects.get(
@@ -67,7 +67,9 @@ def add_to_cart(request, product_id):
                     except:
                         pass
 
-        cart_item_exists = CartItem.objects.filter(product=product, user=current_user).exists()
+        cart_item_exists = CartItem.objects.filter(
+            product=product, user=current_user
+        ).exists()
 
         if cart_item_exists:
             cart_item = CartItem.objects.filter(product=product, user=current_user)
@@ -86,7 +88,9 @@ def add_to_cart(request, product_id):
                 item.quantity += 1
                 item.save()
             else:
-                item = CartItem.objects.create(product=product, quantity=1, user=current_user)
+                item = CartItem.objects.create(
+                    product=product, quantity=1, user=current_user
+                )
                 if len(variations) > 0:
                     item.variations.clear()
                     item.variations.add(*variations)
@@ -114,7 +118,7 @@ def add_to_cart(request, product_id):
             # Iterate over request.POST items
             for key, value in request.POST.items():
                 if (
-                        key != "csrfmiddlewaretoken" and value
+                    key != "csrfmiddlewaretoken" and value
                 ):  # Exclude CSRF token and empty fields
                     try:
                         variation = Variation.objects.get(
@@ -179,14 +183,18 @@ def remove_from_cart(request, product_id, cart_item_id):
     if request.user.is_authenticated:
         # For authenticated users, look for cart items associated with the user
         try:
-            cart_item = CartItem.objects.get(product=product, user=request.user, id=cart_item_id, is_active=True)
+            cart_item = CartItem.objects.get(
+                product=product, user=request.user, id=cart_item_id, is_active=True
+            )
         except CartItem.DoesNotExist:
             pass  # Handle the case where the cart item does not exist
     else:
         # For guest users, use the session-based cart
         cart = Cart.objects.get(cart_id=get_cart_id(request))
         try:
-            cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+            cart_item = CartItem.objects.get(
+                product=product, cart=cart, id=cart_item_id
+            )
         except CartItem.DoesNotExist:
             pass  # Handle the case where the cart item does not exist
 
@@ -210,14 +218,18 @@ def remove_product(request, product_id, cart_item_id):
     if request.user.is_authenticated:
         # For authenticated users, directly target the cart item associated with the user
         try:
-            cart_item = CartItem.objects.get(product=product, user=request.user, id=cart_item_id)
+            cart_item = CartItem.objects.get(
+                product=product, user=request.user, id=cart_item_id
+            )
         except CartItem.DoesNotExist:
             return redirect("cart")
     else:
         # For guests, use the session-based cart
         cart = Cart.objects.get(cart_id=get_cart_id(request))
         try:
-            cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+            cart_item = CartItem.objects.get(
+                product=product, cart=cart, id=cart_item_id
+            )
         except CartItem.DoesNotExist:
             return redirect("cart")
 

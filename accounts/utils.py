@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from carts.models import CartItem, Cart
+from carts.models import Cart, CartItem
 from carts.views import get_cart_id
 
 
@@ -47,7 +47,7 @@ def merge_cart_items(request, user):
             user_cart_item, created = CartItem.objects.get_or_create(
                 user=user,
                 product=guest_item.product,
-                defaults={'quantity': 0}  # Prevent auto-increment
+                defaults={"quantity": 0},  # Prevent auto-increment
             )
             # Check for matching product variations
             if set(product_variations) == set(list(user_cart_item.variations.all())):
