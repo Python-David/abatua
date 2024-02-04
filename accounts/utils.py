@@ -5,6 +5,9 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from carts.models import Cart, CartItem
+from carts.views import get_cart_id
+
 
 def send_email(request, user, subject, template, redirect_url):
     """
@@ -27,3 +30,38 @@ def send_email(request, user, subject, template, redirect_url):
     )
     email = EmailMessage(subject, message, to=[user.email])
     email.send()
+
+
+def merge_cart_items(request, user):
+    try:
+        cart_id = get_cart_id(request)
+        cart, created = Cart.objects.get_or_create(cart_id=cart_id)
+
+        # Check if there are any cart items for the guest cart
+        guest_cart_items = CartItem.objects.filter(cart=cart)
+        if not guest_cart_items.exists():
+            return True  # No items to merge
+
+        for guest_item in guest_cart_items:
+            product_variations = list(guest_item.variations.all())
+            user_cart_item, created = CartItem.objects.get_or_create(
+                user=user,
+                product=guest_item.product,
+                defaults={"quantity": 0},  # Prevent auto-increment
+            )
+            # Check for matching product variations
+            if set(product_variations) == set(list(user_cart_item.variations.all())):
+                user_cart_item.quantity += guest_item.quantity
+            else:
+                # Assign guest cart item to the user if no exact match is found
+                guest_item.user = user
+                guest_item.save()
+                continue  # Skip the deletion for newly assigned items
+
+            user_cart_item.save()
+            guest_item.delete()  # Remove the guest item after merging
+
+        return True
+    except Exception as e:
+        # Consider logging the exception e here
+        return False

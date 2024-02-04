@@ -6,6 +6,8 @@ from django.utils.http import urlsafe_base64_decode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
+from carts.models import Cart, CartItem
+from carts.views import get_cart_id
 
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
@@ -13,6 +15,7 @@ from .config import (
     ACCOUNT_VERIFICATION_FAILURE_MESSAGE,
     ACCOUNT_VERIFICATION_SUCCESS_MESSAGE,
     LOGIN_ERROR_MESSAGE,
+    LOGIN_SUCCESS_MESSAGE,
     LOGOUT_SUCCESS_MESSAGE,
     PASSWORD_RESET_SUCCESS_EMAIL,
     PASSWORD_RESET_SUCCESS_MESSAGE,
@@ -21,7 +24,7 @@ from .config import (
     RESET_PASSWORD_SUBJECT,
     RESET_PASSWORD_SUCCESS_MESSAGE,
 )
-from .utils import send_email
+from .utils import merge_cart_items, send_email
 
 
 def register(request):
@@ -69,22 +72,29 @@ def register(request):
 
 
 def login(request):
-    if request.method == "POST":
-        email = request.POST["email"]
-        password = request.POST["password"]
+    if request.method != "POST":
+        return render(request, "accounts/login.html")
 
-        user = auth.authenticate(email=email, password=password)
+    email = request.POST.get("email")
+    password = request.POST.get("password")
+    user = auth.authenticate(email=email, password=password)
 
-        if user is not None:
-            auth.login(request, user)
-            messages.success(request, "You are now logged in")
+    if not user:
+        messages.error(request, LOGIN_ERROR_MESSAGE)
+        return redirect("login")
 
-            return redirect("dashboard")
-        else:
-            messages.error(request, LOGIN_ERROR_MESSAGE)
+    # Process the cart items after successful authentication
+    if merge_cart_items(request, user):
+        auth.login(request, user)
+        messages.success(request, LOGIN_SUCCESS_MESSAGE)
+        return redirect("dashboard")
+    else:
+        # Handle the case where cart merging fails, if necessary
+        pass
 
-            return redirect("login")
-    return render(request, "accounts/login.html")
+    auth.login(request, user)
+    messages.success(request, LOGIN_SUCCESS_MESSAGE)
+    return redirect("dashboard")
 
 
 @login_required(login_url="login")
