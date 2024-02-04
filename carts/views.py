@@ -75,8 +75,8 @@ def add_to_cart(request, product_id):
             id_list = []
 
             for item in cart_item:
-                existing_variations = item.variations.all()
-                existing_variations_list.append(list(existing_variations))
+                existing_variation = item.variations.all()
+                existing_variations_list.append(list(existing_variation))
                 id_list.append(item.id)
 
             if variations in existing_variations_list:

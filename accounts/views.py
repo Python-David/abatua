@@ -21,9 +21,9 @@ from .config import (
     PASSWORDS_DO_NOT_MATCH,
     RESET_PASSWORD_ERROR_MESSAGE,
     RESET_PASSWORD_SUBJECT,
-    RESET_PASSWORD_SUCCESS_MESSAGE,
+    RESET_PASSWORD_SUCCESS_MESSAGE, LOGIN_SUCCESS_MESSAGE,
 )
-from .utils import send_email
+from .utils import send_email, merge_cart_items
 
 
 def register(request):
@@ -71,57 +71,29 @@ def register(request):
 
 
 def login(request):
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
+    if request.method != "POST":
+        return render(request, "accounts/login.html")
 
-        user = auth.authenticate(email=email, password=password)
+    email = request.POST.get("email")
+    password = request.POST.get("password")
+    user = auth.authenticate(email=email, password=password)
 
-        if user is not None:
-            # User authenticated; proceed with login and cart merging
-            auth.login(request, user)
-            session_cart_id = get_cart_id(request)
+    if not user:
+        messages.error(request, LOGIN_ERROR_MESSAGE)
+        return redirect("login")
 
-            # Attempt to get the session cart and its items
-            try:
-                session_cart = Cart.objects.get(cart_id=session_cart_id)
-                session_cart_items = CartItem.objects.filter(cart=session_cart)
+    # Process the cart items after successful authentication
+    if merge_cart_items(request, user):
+        auth.login(request, user)
+        messages.success(request, LOGIN_SUCCESS_MESSAGE)
+        return redirect("dashboard")
+    else:
+        # Handle the case where cart merging fails, if necessary
+        pass
 
-                for session_item in session_cart_items:
-                    # For each session cart item, check if the user already has a matching item
-                    match_found = False
-                    for user_item in CartItem.objects.filter(user=user, product=session_item.product, is_active=True):
-                        if set(user_item.variations.all()) == set(session_item.variations.all()):
-                            # Matching item found in the user's cart; increase quantity and delete session item
-                            user_item.quantity += session_item.quantity
-                            user_item.save()
-                            session_item.delete()
-                            match_found = True
-                            break
-
-                    if not match_found:
-                        # No matching item found; assign session item to the user
-                        session_item.user = user
-                        session_item.cart = None
-                        session_item.save()
-
-                # If the session cart is now empty, delete it
-                if not CartItem.objects.filter(cart=session_cart).exists():
-                    session_cart.delete()
-
-            except Cart.DoesNotExist:
-                # No session cart to merge, proceed normally
-                pass
-
-            messages.success(request, "You are now logged in")
-            return redirect("dashboard")
-
-        else:
-            # Authentication failed; return to login with error message
-            messages.error(request, "Invalid login credentials")
-            return redirect("login")
-
-    return render(request, "accounts/login.html")
+    auth.login(request, user)
+    messages.success(request, LOGIN_SUCCESS_MESSAGE)
+    return redirect("dashboard")
 
 
 @login_required(login_url="login")
