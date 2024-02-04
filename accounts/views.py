@@ -24,7 +24,7 @@ from .config import (
     RESET_PASSWORD_SUBJECT,
     RESET_PASSWORD_SUCCESS_MESSAGE,
 )
-from .utils import merge_cart_items, send_email, redirect_to_next_page
+from .utils import merge_cart_items, redirect_to_next_page, send_email
 
 
 def register(request):

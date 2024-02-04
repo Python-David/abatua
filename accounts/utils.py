@@ -49,7 +49,9 @@ def merge_cart_items(request, user):
 
             # Try to find a matching cart item for the user
             matching_item = None
-            user_cart_items = CartItem.objects.filter(user=user, product=guest_item.product)
+            user_cart_items = CartItem.objects.filter(
+                user=user, product=guest_item.product
+            )
             for item in user_cart_items:
                 if product_variations == set(item.variations.all()):
                     matching_item = item
@@ -84,7 +86,7 @@ def redirect_to_next_page(request):
 
     try:
         query = requests.utils.urlparse(url).query
-        params = dict(x.split('=') for x in query.split('&') if '=' in x)
+        params = dict(x.split("=") for x in query.split("&") if "=" in x)
         next_page = params.get("next")
         if next_page:
             return redirect(next_page)
