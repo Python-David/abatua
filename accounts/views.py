@@ -1,8 +1,10 @@
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import redirect, render
-from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from accounts.forms import RegistrationForm
 from accounts.models import Account
@@ -54,11 +56,14 @@ def register(request):
             # User activation
 
             send_email(
-                request=request,
                 user=user,
                 subject=ACCOUNT_ACTIVATION_SUBJECT,
                 template="accounts/account_verification_email.html",
-                redirect_url="/accounts/login/?command=verification&email=" + email,
+                context={
+                    "domain": get_current_site(request).domain,
+                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                    "token": default_token_generator.make_token(user),
+                },
             )
 
             return redirect("/accounts/login/?command=verification&email=" + email)

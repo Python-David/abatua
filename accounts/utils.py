@@ -1,4 +1,5 @@
 import requests
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -11,27 +12,33 @@ from carts.models import Cart, CartItem
 from carts.views import get_cart_id
 
 
-def send_email(request, user, subject, template, redirect_url):
+def send_email(user, subject, template, context):
     """
     Sends an email to the user with a custom message.
-    :param request: HttpRequest object.
     :param user: User instance to whom the email is sent.
     :param subject: Subject of the email.
     :param template: Path to the template used for the email body.
-    :param redirect_url: URL to redirect to after sending the email.
+    :param context: Context dictionary to be passed to the template.
     """
-    current_site = get_current_site(request)
-    message = render_to_string(
-        template,
-        {
-            "user": user,
-            "domain": current_site.domain,
-            "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-            "token": default_token_generator.make_token(user),
-        },
-    )
-    email = EmailMessage(subject, message, to=[user.email])
+
+    context["user"] = user
+    message = render_to_string(template, context)
+    from_email = settings.DEFAULT_FROM_EMAIL
+    email = EmailMessage(subject, message, from_email, to=[user.email])
     email.send()
+    # current_site = get_current_site(request)
+    # message = render_to_string(
+    #     template,
+    #     {
+    #         "user": user,
+    #         "domain": current_site.domain,
+    #         "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+    #         "token": default_token_generator.make_token(user),
+    #     },
+    # )
+    # from_email = settings.DEFAULT_FROM_EMAIL
+    # email = EmailMessage(subject, message, from_email, to=[user.email])
+    # email.send()
 
 
 def merge_cart_items(request, user):

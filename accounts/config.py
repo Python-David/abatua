@@ -30,3 +30,5 @@ PASSWORDS_DO_NOT_MATCH = "The passwords you entered didn't match. Double-check y
 PASSWORD_RESET_SUCCESS_MESSAGE = (
     "Your password has been updated! You can now log in with your new password."
 )
+
+ORDER_CONFIRMATION_SUBJECT = "Thank you for your order with us!"
