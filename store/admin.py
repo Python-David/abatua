@@ -14,6 +14,17 @@ class ProductAdmin(admin.ModelAdmin):
         "is_available",
     )
 
+class ReviewRatingAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "product",
+        "subject",
+        "rating",
+        "status",
+        "created_at",
+        "updated_at",
+    )
+
 
 class VariationAdmin(admin.ModelAdmin):
     readonly_fields = ("date_created",)
@@ -27,4 +38,4 @@ class VariationAdmin(admin.ModelAdmin):
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Variation, VariationAdmin)
-admin.site.register(ReviewRating)
+admin.site.register(ReviewRating, ReviewRatingAdmin)

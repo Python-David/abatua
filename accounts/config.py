@@ -32,3 +32,7 @@ PASSWORD_RESET_SUCCESS_MESSAGE = (
 )
 
 ORDER_CONFIRMATION_SUBJECT = "Thank you for your order with us!"
+
+REVIEW_SUBMITTED_MESSAGE = "Thank you, your review has been saved!"
+
+REVIEW_UPDATED_MESSAGE = "Thank you, your review has been updated!"
