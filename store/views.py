@@ -9,7 +9,7 @@ from category.models import Category
 
 from orders.models import OrderProduct
 
-from .models import Product, ReviewRating
+from .models import Product, ReviewRating, ProductGallery
 from .forms import ReviewForm
 from accounts.config import REVIEW_SUBMITTED_MESSAGE, REVIEW_UPDATED_MESSAGE
 
@@ -36,7 +36,7 @@ def store(request, category_slug=None):
 def product_detail(request, category_slug=None, product_slug=None):
     try:
         product = get_object_or_404(Product, slug=product_slug)
-        reviews = ReviewRating.objects.filter(product=product)
+        reviews = ReviewRating.objects.filter(product=product, status=True)
         category = get_object_or_404(Category, slug=category_slug)
         in_cart = CartItem.objects.filter(
             cart__cart_id=get_cart_id(request), product=product
@@ -52,13 +52,17 @@ def product_detail(request, category_slug=None, product_slug=None):
     else:
         order_product = None
 
+    # Get product gallery
+    product_gallery = ProductGallery.objects.filter(product_id=product.id)
+
 
     context = {
         "product": product,
         "category": category,
         "in_cart": in_cart,
         "order_product": order_product,
-        "reviews": reviews
+        "reviews": reviews,
+        "product_gallery": product_gallery,
     }
 
 

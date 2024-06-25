@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Product, Variation, ReviewRating
+from .models import Product, Variation, ReviewRating, ProductGallery
+import admin_thumbnails
+
+
+@admin_thumbnails.thumbnail('image')
+class ProductGalleryInLine(admin.TabularInline):
+    model = ProductGallery
+    extra = 1
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -13,6 +20,7 @@ class ProductAdmin(admin.ModelAdmin):
         "date_modified",
         "is_available",
     )
+    inlines = [ProductGalleryInLine]
 
 class ReviewRatingAdmin(admin.ModelAdmin):
     list_display = (
@@ -39,3 +47,4 @@ class VariationAdmin(admin.ModelAdmin):
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Variation, VariationAdmin)
 admin.site.register(ReviewRating, ReviewRatingAdmin)
+admin.site.register(ProductGallery)

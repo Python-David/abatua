@@ -24,6 +24,7 @@ RESET_PASSWORD_SUCCESS_MESSAGE = (
 )
 
 RESET_PASSWORD_ERROR_MESSAGE = "Looks like that password reset link has expired. No worries, let's send you a new one."
+PASSWORD_ERROR_MESSAGE = "Please enter a valid current password"
 
 PASSWORDS_DO_NOT_MATCH = "The passwords you entered didn't match. Double-check your typing and let's try again."
 
@@ -36,3 +37,5 @@ ORDER_CONFIRMATION_SUBJECT = "Thank you for your order with us!"
 REVIEW_SUBMITTED_MESSAGE = "Thank you, your review has been saved!"
 
 REVIEW_UPDATED_MESSAGE = "Thank you, your review has been updated!"
+
+PROFILE_UPDATE_SUCCESS = "Your profile has been updated!"
