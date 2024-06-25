@@ -1,10 +1,10 @@
+import admin_thumbnails
 from django.contrib import admin
 
-from .models import Product, Variation, ReviewRating, ProductGallery
-import admin_thumbnails
+from .models import Product, ProductGallery, ReviewRating, Variation
 
 
-@admin_thumbnails.thumbnail('image')
+@admin_thumbnails.thumbnail("image")
 class ProductGalleryInLine(admin.TabularInline):
     model = ProductGallery
     extra = 1
@@ -21,6 +21,7 @@ class ProductAdmin(admin.ModelAdmin):
         "is_available",
     )
     inlines = [ProductGalleryInLine]
+
 
 class ReviewRatingAdmin(admin.ModelAdmin):
     list_display = (

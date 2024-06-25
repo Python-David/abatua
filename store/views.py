@@ -1,17 +1,16 @@
+from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.shortcuts import get_list_or_404, get_object_or_404, render, redirect
-from django.contrib import messages
+from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 
+from accounts.config import REVIEW_SUBMITTED_MESSAGE, REVIEW_UPDATED_MESSAGE
 from carts.models import CartItem
 from carts.views import get_cart_id
 from category.models import Category
-
 from orders.models import OrderProduct
 
-from .models import Product, ReviewRating, ProductGallery
 from .forms import ReviewForm
-from accounts.config import REVIEW_SUBMITTED_MESSAGE, REVIEW_UPDATED_MESSAGE
+from .models import Product, ProductGallery, ReviewRating
 
 
 def store(request, category_slug=None):
@@ -46,7 +45,9 @@ def product_detail(request, category_slug=None, product_slug=None):
 
     if request.user.is_authenticated:
         try:
-            order_product = OrderProduct.objects.filter(user=request.user, product_id=product.id).exists()
+            order_product = OrderProduct.objects.filter(
+                user=request.user, product_id=product.id
+            ).exists()
         except OrderProduct.DoesNotExist:
             order_product = None
     else:
@@ -54,7 +55,6 @@ def product_detail(request, category_slug=None, product_slug=None):
 
     # Get product gallery
     product_gallery = ProductGallery.objects.filter(product_id=product.id)
-
 
     context = {
         "product": product,
@@ -64,7 +64,6 @@ def product_detail(request, category_slug=None, product_slug=None):
         "reviews": reviews,
         "product_gallery": product_gallery,
     }
-
 
     return render(request, "store/product_detail.html", context)
 
@@ -93,7 +92,9 @@ def submit_review(request, product_id):
     if request.method == "POST":
         try:
             # Check if the user has already reviewed this product
-            reviews = ReviewRating.objects.get(user__id=request.user.id, product__id=product_id)
+            reviews = ReviewRating.objects.get(
+                user__id=request.user.id, product__id=product_id
+            )
             form = ReviewForm(request.POST, instance=reviews)
         except ReviewRating.DoesNotExist:
             # If no existing review, create a new form instance
@@ -107,12 +108,14 @@ def submit_review(request, product_id):
             data.user_id = request.user.id
             data.save()
 
-            if 'instance' in locals():
+            if "instance" in locals():
                 messages.success(request, "Your review has been updated!")
             else:
                 messages.success(request, "Your review has been submitted!")
         else:
-            messages.error(request, "There was an error with your submission. Please try again.")
+            messages.error(
+                request, "There was an error with your submission. Please try again."
+            )
 
         return redirect(url)
 

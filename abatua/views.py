@@ -17,4 +17,3 @@ def home(request):
         "product_reviews": product_reviews,
     }
     return render(request, "home.html", context)
-

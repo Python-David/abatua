@@ -4,7 +4,6 @@ from django.db import models
 from django.urls import reverse
 
 from accounts.models import Account
-
 from category.models import Category
 
 from .config import VARIATION_CATEGORY_CHOICES
@@ -31,17 +30,21 @@ class Product(models.Model):
         return self.product_name
 
     def get_average_rating(self):
-        result = ReviewRating.objects.filter(product=self, status=True).aggregate(average_rating=models.Avg('rating'))
+        result = ReviewRating.objects.filter(product=self, status=True).aggregate(
+            average_rating=models.Avg("rating")
+        )
         average = 0
         if result["average_rating"] is not None:
-            average = float(result['average_rating'])
+            average = float(result["average_rating"])
         return average
 
     def count_review(self):
-        result = ReviewRating.objects.filter(product=self, status=True).aggregate(count=models.Count('id'))
+        result = ReviewRating.objects.filter(product=self, status=True).aggregate(
+            count=models.Count("id")
+        )
         count = 0
         if result["count"] is not None:
-            count = int(result['count'])
+            count = int(result["count"])
         return count
 
 

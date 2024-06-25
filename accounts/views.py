@@ -1,17 +1,19 @@
 import os
-from PIL import Image
+
 from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from PIL import Image
 
 from carts.models import Cart, CartItem
 from carts.views import get_cart_id
 from orders.models import Order, OrderProduct
+
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
     ACCOUNT_DOES_NOT_EXIST_MESSAGE,
@@ -20,18 +22,18 @@ from .config import (
     LOGIN_ERROR_MESSAGE,
     LOGIN_SUCCESS_MESSAGE,
     LOGOUT_SUCCESS_MESSAGE,
+    PASSWORD_ERROR_MESSAGE,
     PASSWORD_RESET_SUCCESS_EMAIL,
     PASSWORD_RESET_SUCCESS_MESSAGE,
     PASSWORDS_DO_NOT_MATCH,
+    PROFILE_UPDATE_SUCCESS,
     RESET_PASSWORD_ERROR_MESSAGE,
     RESET_PASSWORD_SUBJECT,
     RESET_PASSWORD_SUCCESS_MESSAGE,
-    PROFILE_UPDATE_SUCCESS,
-    PASSWORD_ERROR_MESSAGE,
 )
 from .forms import RegistrationForm, UserForm, UserProfileForm
 from .models import Account, UserProfile
-from .utils import merge_cart_items, redirect_to_next_page, send_email, resize_image
+from .utils import merge_cart_items, redirect_to_next_page, resize_image, send_email
 
 
 def register(request):
@@ -135,7 +137,9 @@ def activate(request, uidb64, token):
 
 @login_required(login_url="login")
 def dashboard(request):
-    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id, is_ordered=True)
+    orders = Order.objects.order_by("-created_at").filter(
+        user_id=request.user.id, is_ordered=True
+    )
     order_count = orders.count()
     user_profile = UserProfile.objects.get(user_id=request.user.id)
     context = {
@@ -211,10 +215,10 @@ def reset_password(request):
 
 @login_required(login_url="login")
 def my_orders(request):
-    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by("-created_at")
-    context = {
-        "orders": orders
-    }
+    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by(
+        "-created_at"
+    )
+    context = {"orders": orders}
     return render(request, "accounts/my_orders.html", context)
 
 
@@ -223,14 +227,16 @@ def edit_profile(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     if request.method == "POST":
         user_form = UserForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
+        profile_form = UserProfileForm(
+            request.POST, request.FILES, instance=user_profile
+        )
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_instance = profile_form.save(commit=False)
 
             # Handle profile picture resizing
-            if 'profile_picture' in request.FILES:
-                profile_picture = request.FILES['profile_picture']
+            if "profile_picture" in request.FILES:
+                profile_picture = request.FILES["profile_picture"]
                 try:
                     resized_image_path = resize_image(profile_picture)
                     profile_instance.profile_picture = resized_image_path
@@ -251,7 +257,7 @@ def edit_profile(request):
     context = {
         "user_form": user_form,
         "profile_form": profile_form,
-        "user_profile": user_profile
+        "user_profile": user_profile,
     }
     return render(request, "accounts/edit_profile.html", context)
 

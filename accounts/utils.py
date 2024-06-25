@@ -1,6 +1,6 @@
 import os
+
 import requests
-from PIL import Image
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from PIL import Image
 
 from carts.models import Cart, CartItem
 from carts.views import get_cart_id
@@ -93,7 +94,7 @@ def redirect_to_next_page(request):
     return redirect("dashboard")
 
 
-def resize_image(image, max_size=(100, 100), quality=85, upload_to='userprofile'):
+def resize_image(image, max_size=(100, 100), quality=85, upload_to="userprofile"):
     """
     Resizes an image to the specified max_size and quality, saving it to the specified directory.
 
@@ -117,10 +118,10 @@ def resize_image(image, max_size=(100, 100), quality=85, upload_to='userprofile'
 
     # Determine the file extension and format
     file_extension = os.path.splitext(image.name)[1].lower()
-    if file_extension in ['.jpg', '.jpeg']:
-        format = 'JPEG'
-    elif file_extension == '.png':
-        format = 'PNG'
+    if file_extension in [".jpg", ".jpeg"]:
+        format = "JPEG"
+    elif file_extension == ".png":
+        format = "PNG"
     else:
         raise ValueError("Unsupported file extension.")
 
@@ -131,7 +132,7 @@ def resize_image(image, max_size=(100, 100), quality=85, upload_to='userprofile'
 
     # Save the resized image
     image_path = os.path.join(save_directory, image.name)
-    if format == 'JPEG':
+    if format == "JPEG":
         img.save(image_path, format=format, quality=quality)
     else:
         img.save(image_path, format=format)
