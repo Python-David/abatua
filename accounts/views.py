@@ -1,15 +1,18 @@
+import os
+
+from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from PIL import Image
 
-from accounts.forms import RegistrationForm
-from accounts.models import Account
 from carts.models import Cart, CartItem
 from carts.views import get_cart_id
+from orders.models import Order, OrderProduct
 
 from .config import (
     ACCOUNT_ACTIVATION_SUBJECT,
@@ -19,14 +22,18 @@ from .config import (
     LOGIN_ERROR_MESSAGE,
     LOGIN_SUCCESS_MESSAGE,
     LOGOUT_SUCCESS_MESSAGE,
+    PASSWORD_ERROR_MESSAGE,
     PASSWORD_RESET_SUCCESS_EMAIL,
     PASSWORD_RESET_SUCCESS_MESSAGE,
     PASSWORDS_DO_NOT_MATCH,
+    PROFILE_UPDATE_SUCCESS,
     RESET_PASSWORD_ERROR_MESSAGE,
     RESET_PASSWORD_SUBJECT,
     RESET_PASSWORD_SUCCESS_MESSAGE,
 )
-from .utils import merge_cart_items, redirect_to_next_page, send_email
+from .forms import RegistrationForm, UserForm, UserProfileForm
+from .models import Account, UserProfile
+from .utils import merge_cart_items, redirect_to_next_page, resize_image, send_email
 
 
 def register(request):
@@ -130,7 +137,16 @@ def activate(request, uidb64, token):
 
 @login_required(login_url="login")
 def dashboard(request):
-    return render(request, "accounts/dashboard.html")
+    orders = Order.objects.order_by("-created_at").filter(
+        user_id=request.user.id, is_ordered=True
+    )
+    order_count = orders.count()
+    user_profile = UserProfile.objects.get(user_id=request.user.id)
+    context = {
+        "order_count": order_count,
+        "user_profile": user_profile,
+    }
+    return render(request, "accounts/dashboard.html", context)
 
 
 def forgot_password(request):
@@ -138,12 +154,16 @@ def forgot_password(request):
         email = request.POST["email"]
         if Account.objects.filter(email=email).exists():
             user = Account.objects.get(email__iexact=email)
+
             send_email(
-                request=request,
                 user=user,
                 subject=RESET_PASSWORD_SUBJECT,
                 template="accounts/reset_password_email.html",
-                redirect_url="login",
+                context={
+                    "domain": get_current_site(request).domain,
+                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                    "token": default_token_generator.make_token(user),
+                },
             )
             messages.success(request, PASSWORD_RESET_SUCCESS_EMAIL)
             return redirect("login")
@@ -191,3 +211,95 @@ def reset_password(request):
 
     else:
         return render(request, "accounts/reset_password.html")
+
+
+@login_required(login_url="login")
+def my_orders(request):
+    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by(
+        "-created_at"
+    )
+    context = {"orders": orders}
+    return render(request, "accounts/my_orders.html", context)
+
+
+@login_required(login_url="login")
+def edit_profile(request):
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+    if request.method == "POST":
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(
+            request.POST, request.FILES, instance=user_profile
+        )
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_instance = profile_form.save(commit=False)
+
+            # Handle profile picture resizing
+            if "profile_picture" in request.FILES:
+                profile_picture = request.FILES["profile_picture"]
+                try:
+                    resized_image_path = resize_image(profile_picture)
+                    profile_instance.profile_picture = resized_image_path
+                except ValueError as ve:
+                    messages.error(request, f"Error processing image: {ve}")
+                    return redirect("edit_profile")
+                except Exception as e:
+                    messages.error(request, f"Unexpected error: {str(e)}")
+                    return redirect("edit_profile")
+
+            profile_instance.save()
+            messages.success(request, PROFILE_UPDATE_SUCCESS)
+            return redirect("edit_profile")
+    else:
+        user_form = UserForm(instance=request.user)
+        profile_form = UserProfileForm(instance=user_profile)
+
+    context = {
+        "user_form": user_form,
+        "profile_form": profile_form,
+        "user_profile": user_profile,
+    }
+    return render(request, "accounts/edit_profile.html", context)
+
+
+@login_required(login_url="login")
+def change_password(request):
+    if request.method == "POST":
+        current_password = request.POST["current_password"]
+        new_password = request.POST["new_password"]
+        confirm_password = request.POST["confirm_new_password"]
+
+        user = Account.objects.get(username__exact=request.user.username)
+        if new_password == confirm_password:
+            success = user.check_password(current_password)
+            if success:
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, PASSWORD_RESET_SUCCESS_MESSAGE)
+
+                return redirect("change_password")
+            else:
+                messages.error(request, PASSWORD_ERROR_MESSAGE)
+                return redirect("change_password")
+        else:
+            messages.error(request, PASSWORDS_DO_NOT_MATCH)
+            return redirect("change_password")
+
+    return render(request, "accounts/change_password.html")
+
+
+@login_required(login_url="login")
+def order_detail(request, order_id):
+    order_detail_object = OrderProduct.objects.filter(order__order_number=order_id)
+    print(order_detail_object)
+    order = Order.objects.get(order_number=order_id)
+    subtotal = 0
+    for i in order_detail_object:
+        subtotal += i.product_price * i.quantity
+
+    context = {
+        "order_detail_object": order_detail_object,
+        "order": order,
+        "subtotal": subtotal,
+    }
+    return render(request, "accounts/order_detail.html", context)

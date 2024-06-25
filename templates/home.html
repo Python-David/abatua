@@ -32,6 +32,20 @@
 			<figcaption class="info-wrap">
 				<a href="{{ product.get_url }}" class="title">{{ product.product_name }}</a>
 				<div class="price mt-1">${{ product.price }}</div> <!-- price-wrap.// -->
+				<div class="rating-star">
+    <span>
+        <!-- Star 1 -->
+        <i class="fa{% if product.get_average_rating >= 1 %}-solid fa-star{% elif product.get_average_rating >= 0.5 %}-solid fa-star-half{% else %}-regular fa-star{% endif %}"></i>
+        <!-- Star 2 -->
+        <i class="fa{% if product.get_average_rating >= 2 %}-solid fa-star{% elif product.get_average_rating >= 1.5 %}-solid fa-star-half{% else %}-regular fa-star{% endif %}"></i>
+        <!-- Star 3 -->
+        <i class="fa{% if product.get_average_rating >= 3 %}-solid fa-star{% elif product.get_average_rating >= 2.5 %}-solid fa-star-half{% else %}-regular fa-star{% endif %}"></i>
+        <!-- Star 4 -->
+        <i class="fa{% if product.get_average_rating >= 4 %}-solid fa-star{% elif product.get_average_rating >= 3.5 %}-solid fa-star-half{% else %}-regular fa-star{% endif %}"></i>
+        <!-- Star 5 -->
+        <i class="fa{% if product.get_average_rating >= 5 %}-solid fa-star{% elif product.get_average_rating >= 4.5 %}-solid fa-star-half{% else %}-regular fa-star{% endif %}"></i>
+    </span>
+</div>
 			</figcaption>
 		</div>
 	</div> <!-- col.// -->
